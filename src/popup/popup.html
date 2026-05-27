@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quick Copy Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Shadcn UI Tokens */
+      :root {
+        --background: #ffffff;
+        --foreground: #020817;
+        --muted: #f8fafc;
+        --muted-foreground: #64748b;
+        --border: #e2e8f0;
+        --primary: #7c3aed; /* Violet-600 */
+        --radius: 8px;
+        --recording: #f59e0b; /* amber-500 for recording */
+        --conflict: #ef4444; /* red-500 for conflicts */
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: #020817;
+          --foreground: #f8fafc;
+          --muted: #0f172a;
+          --muted-foreground: #94a3b8;
+          --border: #1e293b;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Manrope", sans-serif;
+        width: 360px;
+        background-color: var(--background);
+        color: var(--foreground);
+        padding: 20px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+        line-height: 1.5;
+        position: relative;
+        transition: background-color 0.3s;
+      }
+
+      /* Dimming effect when recording */
+      body.is-recording .container > *:not(#shortcuts-section) {
+        opacity: 0.3;
+        pointer-events: none;
+        filter: blur(1px);
+      }
+      
+      body.is-recording #shortcuts-section .section-label {
+         opacity: 0.3;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        transition: all 0.3s ease;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 4px;
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logo {
+        width: 32px;
+        height: 32px;
+        background-color: var(--primary);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+      .logo svg {
+        width: 18px;
+        height: 18px;
+      }
+      .brand h1 {
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.0125em;
+      }
+
+      .section-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted-foreground);
+        margin-bottom: 10px;
+        transition: opacity 0.3s;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        background-color: var(--background);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .card-info h2 {
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .card-info p {
+        font-size: 11px;
+        color: var(--muted-foreground);
+        margin-top: 1px;
+      }
+
+      input[type="number"] {
+        width: 52px;
+        background-color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--foreground);
+        padding: 6px;
+        text-align: center;
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 13px;
+        outline: none;
+        transition: all 0.2s;
+      }
+
+      .shortcut-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .shortcut-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: var(--background);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+      }
+
+      .shortcut-item:hover {
+        background-color: var(--muted);
+        border-color: var(--primary);
+      }
+
+      .shortcut-item.recording {
+        border-color: var(--recording);
+        background-color: var(--background);
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+        z-index: 10;
+        transform: scale(1.02);
+      }
+      
+      .shortcut-item:not(.recording).dimmed {
+        opacity: 0.3 !important;
+        pointer-events: none;
+        filter: blur(1px);
+      }
+
+      .shortcut-item.conflict {
+        border-color: var(--conflict);
+        animation: shake 0.4s ease-in-out;
+      }
+
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-4px); }
+        75% { transform: translateX(4px); }
+      }
+
+      .shortcut-label-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .shortcut-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--foreground);
+      }
+
+      .conflict-warning {
+        font-size: 9px;
+        color: var(--conflict);
+        font-weight: 700;
+        display: none;
+      }
+
+      .shortcut-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .shortcut-keys {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        font-weight: 700;
+        background-color: var(--muted);
+        border: 1px solid var(--border);
+        color: var(--primary);
+        padding: 4px 10px;
+        border-radius: 4px;
+        letter-spacing: 0.02em;
+        pointer-events: none;
+        min-width: 80px;
+        text-align: center;
+        white-space: nowrap;
+        transition: all 0.2s;
+      }
+
+      .shortcut-item.recording .shortcut-keys {
+        background-color: var(--recording);
+        color: white;
+        border-color: var(--recording);
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      .btn-reset {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background-color: transparent;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--muted-foreground);
+        font-size: 11px;
+        font-family: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-reset:hover {
+        background-color: var(--muted);
+        color: var(--foreground);
+      }
+
+      .footer {
+        margin-top: 12px;
+        text-align: center;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--muted-foreground);
+        opacity: 0.6;
+      }
+
+      .recording-hint {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--foreground);
+        color: var(--background);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        display: none;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        white-space: nowrap;
+        animation: slideUp 0.3s ease-out;
+      }
+
+      @keyframes slideUp {
+        from { transform: translate(-50%, 20px); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+      }
+
+      body.is-recording .recording-hint {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="recording-hint">Recording... Release keys to save (Esc to cancel)</div>
+
+    <div class="container">
+      <header>
+        <div class="header-left">
+          <div class="logo">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+              ></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            </svg>
+          </div>
+          <div class="brand"><h1>Quick Copy</h1></div>
+        </div>
+        <button
+          id="resetDefaults"
+          class="btn-reset"
+          title="Reset to original shortcuts"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          Reset
+        </button>
+      </header>
+
+      <div>
+        <h3 class="section-label">General Settings</h3>
+        <div class="card">
+          <div class="card-info">
+            <h2>Phrase Range</h2>
+            <p>N-words to capture</p>
+          </div>
+          <input type="number" id="wordCount" min="1" max="100" value="5" />
+        </div>
+      </div>
+
+      <div id="shortcuts-section">
+        <h3 class="section-label">Dynamic Shortcuts</h3>
+        <div class="shortcut-list">
+          <div class="shortcut-item" data-action="sentence">
+            <div class="shortcut-label-wrapper">
+              <span class="shortcut-label">Full Sentence</span>
+              <span class="conflict-warning">Conflict!</span>
+            </div>
+            <div class="shortcut-actions">
+              <span class="shortcut-keys" id="key-sentence">None</span>
+            </div>
+          </div>
+          <div class="shortcut-item" data-action="word1">
+            <div class="shortcut-label-wrapper">
+              <span class="shortcut-label">Single Word</span>
+              <span class="conflict-warning">Conflict!</span>
+            </div>
+            <div class="shortcut-actions">
+              <span class="shortcut-keys" id="key-word1">None</span>
+            </div>
+          </div>
+          <div class="shortcut-item" data-action="word2">
+            <div class="shortcut-label-wrapper">
+              <span class="shortcut-label">Two Word Pairing</span>
+              <span class="conflict-warning">Conflict!</span>
+            </div>
+            <div class="shortcut-actions">
+              <span class="shortcut-keys" id="key-word2">None</span>
+            </div>
+          </div>
+          <div class="shortcut-item" data-action="wordN">
+            <div class="shortcut-label-wrapper">
+              <span class="shortcut-label">Dynamic Phrase</span>
+              <span class="conflict-warning">Conflict!</span>
+            </div>
+            <div class="shortcut-actions">
+              <span class="shortcut-keys" id="key-wordN">None</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>Click row to remap &bull; v1.1</span>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

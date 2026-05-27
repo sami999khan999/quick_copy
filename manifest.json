@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Quick Copy",
+  "version": "1.0",
+  "description": "Copy sentences and words under your cursor instantly with customizable shortcuts.",
+  "permissions": [
+    "clipboardWrite",
+    "contextMenus",
+    "activeTab",
+    "storage"
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/content.js"],
+      "css": ["src/content/styles.css"]
+    }
+  ]
+}
