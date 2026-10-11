@@ -44,7 +44,9 @@ The extension is built with a minimalist, local-first philosophy using Chrome Ex
 1. Clone this repository or download the source code.
 2. Open Chrome and navigate to `chrome://extensions`.
 3. Enable **Developer mode** in the top-right corner.
-4. Click **Load unpacked** and select the extension folder.
+4. Click **Load unpacked** and select the `release/` folder.
+
+`release/` is the built extension and is committed, so no build is needed; after changing the code, run `node build.js` and commit `release/` with it.
 
 ---
 
